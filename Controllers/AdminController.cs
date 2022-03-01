@@ -20,12 +20,21 @@ namespace IndyBooks.Controllers
         [HttpGet]
         public IActionResult Index(long id)
         {
-            IQueryable<Book> books = _db.Books.Include(b=>b.Author);
-            //TODO: filter books by the id (if passed an id as its Route Parameter),
-            //     otherwise use the entire collection of Books, ordered by SKU.
-            
 
-            return View("SearchResults", books);
+
+            IQueryable<Book> books = _db.Books.Include(a => a.Author);
+
+            //filter books by the id (if passed an id as its Route Parameter),
+            //     otherwise use the entire collection of Books, ordered by SKU.
+            if (id == 0)
+            { 
+                return View("SearchResults", books);
+            }
+
+             books = books.Where(Book => Book.Id == id);
+             return View("SearchResults", books);
+
+
         }
         /***
          * CREATE
@@ -33,23 +42,51 @@ namespace IndyBooks.Controllers
         [HttpGet]
         public IActionResult CreateBook()
         {
+            IQueryable<Writer> writer = _db.Writers;
             //TODO: Build a new CreateBookViewModel with a complete set of Writers from the database
+            CreateBookViewModel createBookVM = new CreateBookViewModel()
+            {
+               Writers = writer,
+            };
             
 
-            return View(); //TODO: pass the ViewModel onto the CreateBook View
+            return View(createBookVM); //TODO: pass the ViewModel onto the CreateBook View
         }
         [HttpPost]
         public IActionResult CreateBook(CreateBookViewModel bookVM)
         {
             //TODO: Build the Writer object using the parameter
-           
-            
+            if(bookVM.Name != null)
+            {
+                Writer writer = new Writer()
+                {
+                    Name = bookVM.Name,
+                };
+
+                _db.Writers.Add(writer);
+                
+                
+            } else
+            {
+                _db
+            }
+
+            }
+         
 
             //TODO: Build the Book using the parameter data and your newly created author.
 
+            Book book = new Book()
+            {
+                Title = bookVM.Title,
+                Price = bookVM.Price,
+                SKU = bookVM.SKU,
+                Author = writer,
+
+            };
 
             //TODO: Add author and book to their DbSets; SaveChanges
-           
+            
 
             //TODO: Show the book by passing the Book's id (rather than 1) to the Index Action 
             return RedirectToAction("Index", new { id = 1 });
@@ -67,9 +104,8 @@ namespace IndyBooks.Controllers
         [HttpGet]
         public IActionResult DeleteBook(long id)
         {
-            //TODO: Remove the Book associated with the given id number; Save Changes
-
-
+            _db.Remove(new Book() { Id = id });
+            _db.SaveChanges();
             return RedirectToAction("Index");
         }
 
